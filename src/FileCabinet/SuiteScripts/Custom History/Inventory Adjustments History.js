@@ -91,7 +91,7 @@ function main( logModule, queryModule, serverWidgetModule , search) {
                 }
 
                 if(context.request.parameters.emp){
-                    queryfilters += `AND Transaction.employee = ${context.request.parameters.emp}`
+                    queryfilters += `AND Transaction.createdby = ${context.request.parameters.emp}`
                     Emp_Field.defaultValue = context.request.parameters.emp
                 }
 

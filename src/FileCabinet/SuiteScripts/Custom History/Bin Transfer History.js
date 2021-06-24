@@ -97,18 +97,19 @@ function main( logModule, queryModule, serverWidgetModule , search) {
                         }).binnumber
                         var binquerypeice = `AND (table1.From_Bin = '${binnumber}' OR table2.To_Bin = '${binnumber}')\n`
                     }else {binquerypeice = ''}
-                    var querypiece = itemquerypiece + binquerypeice
+
+                    if (context.request.parameters.lotnumber){
+                        var lotquerypiece = `AND table1.Lot_Number LIKE '%${context.request.parameters.lotnumber}%'\n`
+                    }else {
+                        var lotquerypiece = ''
+                    }
+
+                    var querypiece = itemquerypiece + binquerypeice + lotquerypiece
 
                 } else{
                     var querypiece = ''
                 }
 
-                if (context.request.parameters.lotnumber){
-
-                    var itemquerypiece = `AND table1.Lot_Number LIKE '%${context.request.parameters.lotnumber}%'\n`
-                }else {
-                    var itemquerypiece = ''
-                }
 
                 formProcess( context, form ,querypiece, context.request.parameters.fromdate, context.request.parameters.todate);
 

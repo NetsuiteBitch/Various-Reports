@@ -49,6 +49,13 @@ function main( logModule, queryModule, serverWidgetModule , search) {
             Item_Number.isMandatory = true
 
 
+            var Lot_Number = form.addField({
+                id: 'lot',
+                type: serverWidget.FieldType.TEXT,
+                label: 'Lot (Partial or Whole)',
+            })
+
+
 
             var From_Date = form.addField({
                 id: 'fromdate',
@@ -71,6 +78,11 @@ function main( logModule, queryModule, serverWidgetModule , search) {
 
             // If the form has been submitted...
             if ( context.request.method == 'POST' || context.request.parameters.force) {
+
+                var querypiece = ''
+                if(context.request.parameters.lot){
+                    querypiece = `AND LOT LIKE '%${context.request.parameters.lot}%'`
+                }
                 var dtodate = formatdate(new Date)
                 var dfromdate = new Date()
                 dfromdate.setMonth(dfromdate.getMonth()-1)
@@ -82,7 +94,7 @@ function main( logModule, queryModule, serverWidgetModule , search) {
                 Item_Number.defaultValue = context.request.parameters.item
 
 
-                formProcess( context, form ,context.request.parameters.item, context.request.parameters.fromdate || dfromdate, context.request.parameters.todate || dtodate);
+                formProcess( context, form ,querypiece, context.request.parameters.item, context.request.parameters.fromdate || dfromdate, context.request.parameters.todate || dtodate);
 
             }else{
                 To_Date.defaultValue = new Date
@@ -99,7 +111,7 @@ function main( logModule, queryModule, serverWidgetModule , search) {
 }
 
 
-function formProcess( context, form , item, fromdate, todate) {
+function formProcess( context, form , querypiece, item, fromdate, todate) {
 
     var theQuery = `
         SELECT * FROM
@@ -111,6 +123,7 @@ function formProcess( context, form , item, fromdate, todate) {
             Transaction_Type,
             Date,
             Time,
+            EMP,
             Item_Number,
             CONCAT(CONCAT(ROUND(TRANSACTION_QUANTITY,4),' '), Stock_UOM) as TRANSACTION_QUANTITY,
             LOT,
@@ -124,11 +137,12 @@ function formProcess( context, form , item, fromdate, todate) {
 
             (
             SELECT
-            '<a style="color:#0394fc;" href="https://4287944.app.netsuite.com/app/accounting/transactions/invadjst.nl?id=' || Transaction.id || '&whence=" >' || Transaction.tranid || '</a>' AS Document_Number,
+            '<a style="color:#0394fc;" href="https://4287944.app.netsuite.com/app/accounting/transactions/' || LOWER(Transaction.type) || '.nl?id=' || Transaction.id || '&whence=" >' || Transaction.tranid || '</a>' AS Document_Number,
            --  Transaction.tranid, 
             BUILTIN.DF(Transaction.type) as Transaction_Type, 
             Transaction.Trandate as Date,
             TO_CHAR (Transaction.createddate, 'HH:MI:SS AM') as Time, 
+            BUILTIN.DF(Transaction.createdby) as EMP,
             '<a style="color:#0394fc;" href="https://4287944.app.netsuite.com/app/common/item/item.nl?id=' || Transactionline.item || '&whence=" >' || BUILTIN.DF(Transactionline.item) || '</a>' AS Item_Number,
             --BUILTIN.DF(Transactionline.item) as Item_Number, 
             --BUILTIN.DF(InventoryAssignment.bin) as BIN_NUMBER, 
@@ -170,6 +184,7 @@ function formProcess( context, form , item, fromdate, todate) {
             TO_DATE('${fromdate}','MM/DD/YYYY') 
             AND
             TO_DATE('${todate}', 'MM/DD/YYYY')
+            ${querypiece}
             
                 `
     log.debug("Query",theQuery)

@@ -130,6 +130,7 @@ function formProcess( context, form , querypiece, fromdate, todate) {
     var theQuery = `Select
     '<a style="color:#0394fc;" href="https://4287944.app.netsuite.com/app/accounting/transactions/bintrnfr.nl?id=' || table1.id || '&whence=" >' || table1.tranid || '</a>' as Document_Number,
                     table1.trandate,
+                    table1.time,
                     table1.user,
     '<a style="color:#0394fc;" href="https://4287944.app.netsuite.com/app/common/item/item.nl?id=' || table1.Item_ID || '" >' || table1.Item_Number || '</a>' as Item_Number,
                     table1.description,
@@ -145,6 +146,7 @@ function formProcess( context, form , querypiece, fromdate, todate) {
                 from (SELECT Transaction.id,
                     Transaction.tranid,
                     Transaction.trandate,
+                    TO_CHAR(Transaction.trandate, 'HH24:MM') AS TIME,
                     BUILTIN.DF(Transaction.createdby) as User,
                     Transactionline.item as Item_ID,
                     BUILTIN.DF(Transactionline.item) as Item_Number,
